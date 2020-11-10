@@ -1,19 +1,6 @@
 {% extends "basic/layout.html" %}
 {% set html5_doctype = True %}
 
-{% set classes = [] %}
-{% if pagename == master_doc or 'banners-display' in meta %}
-  {% set classes = classes + ['index'] %}
-{% endif %}
-
-{% if 'code-column' in meta %}
-  {% set classes = classes + ['has_code_col'] %}
-{% endif %}
-
-{% if 'classes' in meta %}
-  {% set classes = classes + meta['classes'].split() %}
-{% endif %}
-
 {%- block linktags -%}
   {% for code, url in language_codes %}
     <link rel="alternate" hreflang="{{ code }}" href="{{ url }}" />
@@ -21,11 +8,6 @@
     <link rel="canonical" href="{{ canonical }}" />
   {{ super() }}
 {%- endblock -%}
-
-{%- block sidebar1 -%}{%- endblock -%}
-{%- block sidebar2 -%}{%- endblock -%}
-{%- block relbar1 -%}{%- endblock -%}
-{%- block relbar2 -%}{%- endblock -%}
 
 {%- block footer -%}
   {%- if google_analytics_key -%}
@@ -55,26 +37,22 @@
         </div>
 
         <div class="collapse navbar-collapse" id="o_sub-menu">
-          <ol class="o_breadcrumb breadcrumb nav navbar-left">
+          {#}<ol class="o_breadcrumb breadcrumb nav navbar-left">
               {% block breadcrumb_desktop %}
               {% include "jinja_templates/breadcrumb_list.html" %}
               {% endblock %}
           </ol>
 
-          <!-- VFE TODO update this part too -->
           <div class="call-to-action navbar-right hidden-xs">
             <a href="https://www.odoo.com/trial" class="btn btn-primary">Start Now</a>
           </div>
 
           <ul class="navbar-nav navbar-right nav o_sub_nav_actions">
-            {% if pagename != master_doc %}
-              <li class="divider"></li>
-            {% endif%}
 
             {% block switchers_desktop %}
             {% include "jinja_templates/switchers_list.html" %}
             {% endblock %}
-          </ul>
+          </ul>{#}
 
           <ul class="nav navbar-nav navbar-right">
             {% if languages or versions %}
@@ -96,70 +74,57 @@
 
 {%- endblock -%}
 
-{%- block content -%}
-  <div id="wrap" class="{{' '.join(classes) }}">
-    {% if meta['banner'] %}
-    {% set has_banner = 'has_banner' %}
-    {% endif %}
-    <figure class="card top {{ has_banner }}">
-      <span class="card-img" {% if meta['banner'] %}style="background-image: url('{{ pathto('_static/' + meta['banner'], True) }}');"{% endif %}></span>
-      <div class="container text-center">
-        <h1> {{ meta.get('main-title', title) }} </h1>
-      </div>
-    </figure>
-    {% if 'code-column' in meta %}
-      {% set container = 'container-fluid' %}
-    {% else %}
-      {% set container = 'container' %}
-    {% endif %}
-      <main class="container {{ ' '.join(classes) }}">
-        {% if pagename == master_doc %}
-          {% include "jinja_templates/homepage.html" %}
-        {% else %}
-          {# VFE TODO arg to display page as full width, without sidebar #}
-          {#}{% if 'banners-display' not in meta %}{#}
-            <div class="o_content row">
-                {% include "jinja_templates/sidebar.html" %}
-              <article class="doc-body {% if 'has-toc' in meta %}doc-toc{% endif %}{% if pagename in toc%}index-category{% endif %}">
-          {#}{% endif %}{#}
-          {% block body %} {% endblock %}
+{# put the sidebar before the body #}
+{% block sidebar1 %}{{ sidebar() }}{% endblock %}
+{% block sidebar2 %}{% endblock %}
 
-          {% if not 'main_toc' in meta and (prev or next) %}
-            <p>
-            {% if prev %}
-              <a href="{{ prev.link|e }}" class="text-left">{{ prev.title }}</a>
-            {% endif %}
-            {% if next %}
-              <a href="{{ next.link|e }}" class="text-right">{{ next.title }}</a>
-            {% endif %}
-            </p>
-          {% endif %}
-          {#}{% if 'banners-display' not in meta %}{#}
-            </article>
-          </div>
-          {#}{% endif %}{#}
-        {% endif %}
-        <div id="mask"></div>
-      </main>
-  </div>
+{% block extrahead %}
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,700'
+          rel='stylesheet' type='text/css' />
+{{ super() }}
+{%- if not embedded %}
+    <style type="text/css">
+      table.right { float: right; margin-left: 20px; }
+      table.right td { border: 1px solid #ccc; }
+      {% if pagename == 'index' %}
+      .related { display: none; }
+      {% endif %}
+    </style>
+    <script>
+      // intelligent scrolling of the sidebar content
+      $(window).scroll(function() {
+        var sb = $('.sphinxsidebarwrapper');
+        var win = $(window);
+        var sbh = sb.height();
+        var offset = $('.sphinxsidebar').position()['top'];
+        var wintop = win.scrollTop();
+        var winbot = wintop + win.innerHeight();
+        var curtop = sb.position()['top'];
+        var curbot = curtop + sbh;
+        // does sidebar fit in window?
+        if (sbh < win.innerHeight()) {
+          // yes: easy case -- always keep at the top
+          sb.css('top', $u.min([$u.max([0, wintop - offset - 10]),
+                                $(document).height() - sbh - 200]));
+        } else {
+          // no: only scroll if top/bottom edge of sidebar is at
+          // top/bottom edge of window
+          if (curtop > wintop && curbot > winbot) {
+            sb.css('top', $u.max([wintop - offset - 10, 0]));
+          } else if (curtop < wintop && curbot < winbot) {
+            sb.css('top', $u.min([winbot - sbh - offset - 20,
+                                  $(document).height() - sbh - 200]));
+          }
+        }
+      });
+    </script>
+{%- endif %}
+{% endblock %}
+{#}{%- block content -%}
 
-  <div class="floating_action_container">
-    <a id="floating_action" class="ripple" href="#">
-      <i class="mdi-action-explore"></i>
-    </a>
-    <div id="floating_action_menu">
-      <span class="bubble"></span>
-      <ul class="list-group content">
-        <!-- VFE FIXME wtf is this kinda lorem ipsum binz ? -->
-        <li class="list-group-item ripple"><a>Cras justo odio</a></li>
-        <li class="list-group-item ripple"><a>Dapibus ac facilisis in</a></li>
-        <li class="list-group-item ripple"><a>Morbi leo risus</a></li>
-        <li class="list-group-item ripple"><a>Porta ac consectetur ac</a></li>
-        <li class="list-group-item ripple"><a>Vestibulum at eros</a></li>
-      </ul>
-    </div>
-  </div>
+  {{ body }}
+
   <footer>
     {% include "jinja_templates/odoo_footer.html" %}
   </footer>
-{%- endblock -%}
+{%- endblock -%}{#}

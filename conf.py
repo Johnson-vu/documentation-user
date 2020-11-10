@@ -26,7 +26,7 @@ if os.path.exists('../odoo/odoo-bin'):
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
-needs_sphinx = '1.2'
+needs_sphinx = '1.6.7'
 
 # Warn all references where target cannot be found
 # but doesn't seem to like Odoo architecture
@@ -135,13 +135,13 @@ pygments_style = 'odoo'
 # a list of builtin themes.
 html_theme = 'odoo_ext'
 
-odoo_cover_default = 'banners/installing_odoo.jpg'
-
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
 html_theme_options = {
-    'nosidebar': 'true',
+    # "sticky_navigation": True,
+    "navigation_depth": 3,
+    # 'stickysidebar': 'true',
 }
 
 # Add any paths that contain custom themes here, relative to this directory.
